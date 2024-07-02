@@ -75,9 +75,9 @@ class LoginForm(FlaskForm):
 
 
 class RegistrationForm(FlaskForm):
-    username = StringField('Username', validators=[DataRequired(), Length(min=3, max=20)])
-    password = StringField('Password', validators=[DataRequired(), Length(min=6, max=20)])
-    confirm_password = StringField('Confirm Password', validators=[DataRequired(),EqualTo(password)])
+    username = StringField('Username', validators=[DataRequired(), Length(min=3, max=20)],render_kw={'placeholder':'username'})
+    password = StringField('Password', validators=[DataRequired(), Length(min=6, max=20)],render_kw={'placeholder':'password'})
+    confirm_password = StringField('Confirm Password', validators=[DataRequired(),EqualTo(password)],render_kw={'placeholder':'confirm password'})
     submit = SubmitField('Register')
 
     def validate_username(form, field):
