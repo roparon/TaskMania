@@ -1,0 +1,41 @@
+{% extends "base.html" %} {% block content %}
+<img class="profile-pic" src="{{ default.jpeg }}" />
+
+<h2 class="account-username">{{ current_user.username }}</h2>
+<p class="account-email">{{ current_user.email }}</p>
+
+<form
+  method="POST"
+  action=""
+  enctype="multipart/form-data"
+  class="account-form"
+>
+  {{ form.hidden_tag() }}
+  <fieldset class="fieldset">
+    <legend class="legend">Profile Information:</legend>
+    <p>
+      {{ form.username.label(class="username-label") }} <br />{% if
+      form.username.errors %} {{ form.username(class="input-username") }} {% for
+      error in form.username.errors %}
+      <span class="span-username">{{ error }}</span>
+      {% endfor %} {% else %} {{ form.username(class="input-username") }} {%
+      endif %}
+    </p>
+    <p>
+      {{ form.email.label(class="email-label") }} <br />
+      {% if form.email.errors %} {{ form.email(class="input-email") }} {% for
+      error in form.email.errors %}
+      <span class="span-email">{{ error }}</span>
+      {% endfor %} {% else %} {{ form.email(class="input-email") }} {% endif %}
+    </p>
+    {{ form.picture.label(class="picture-label") }} {{
+    form.picture(class="input-picture") }} {% if form.picture.errors %} {% for
+    error in form.picture.errors %}
+    <span class="span-picture">{{ error }}</span><br />
+    {% endfor %} {% endif %}
+  </fieldset>
+
+  {{ form.submit(class="submit") }}
+</form>
+
+{% endblock content %}

@@ -1,11 +1,58 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
-</head>
-<body>
-    
-</body>
-</html>
+{% extends 'base.html' %} {% block content %}
+<link rel="stylesheet" href="{{ url_for('static', filename='main.css') }}" />
+<main class="main-container">
+  <div class="flash-container">
+    {% with messages = get_flashed_messages(with_categories=true) %} {% if
+    messages %}
+    <ul>
+      {% for category, message in messages %}
+      <li
+        class="flash-message"
+        style="color: {% if category == 'success' %}green{% elif category ==
+        'danger' %}red{% else %}black{% endif %}"
+      >
+        <span class="span-message"> {{ message }} </span>
+      </li>
+      {% endfor %}
+    </ul>
+    {% endif %} {% endwith %}
+  </div>
+
+  <form method="post" action="{{ url_for('login')}}" class="login-form">
+    {{ form.hidden_tag() }}
+    <h1>Login</h1>
+
+    <div class="username">
+      {% if form.username.errors %} {{ form.username(class="input-box") }} {%
+      for error in form.username.errors %}
+      <span class="form-error">{{ error }}</span>
+      {% endfor %} {% else %} {{ form.username(class='input-box') }} {% endif %}
+      <!-- <i class="bx bxs-user"></i> -->
+    </div>
+
+    <div class="password">
+      {% if form.password.errors %} {{ form.password(class="input-box") }} {%
+      for error in form.password.errors %}
+      <span class="form-error">{{ error }}</span>
+      {% endfor %} {% else %} {{ form.password(class="input-box") }} {% endif %}
+      <!-- <i class="bx bxs-lock-alt"></i> -->
+    </div>
+
+    <div class="remember-forgot">
+      <span>
+        {{ form.remember(class='checkbox')}} {{ form.remember.label() }}
+      </span>
+      <a href="#">Forgot password?</a>
+    </div>
+
+    {{ form.submit(class="submit") }}
+    <div class="sign-up">
+      Don't have an account?
+      <a href="{{ url_for('register') }}">Register</a>
+    </div>
+  </form>
+</main>
+
+{% endblock %}
+<!-- TODO Ongeza hio jicho ya kuona pasword na hizo icons za user na
+usisahau kueka hizo links kwa base -->
