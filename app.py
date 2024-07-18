@@ -177,16 +177,22 @@ def update_task_status(task_id):
 
 @app.route('/edit_task/<int:task_id>',methods=['GET','POST'])
 def edit_task(task_id):
-    # try:
-    #     task = Task.query.get_or_404(task_id)
-    #     task.status = 'completed' in request.form
-    #     db.session.commit()
-    #     return redirect(url_for('index'))
-    # except SQLAlchemyError as e:
-    #     db.session.rollback()
-    #     flash(f"Failed to update task status:{str(e)}",'danger')
-    pass
-    return redirect(url_for('index'))
+    task = Task.query.filter_by(id=task_id).first()
+    form = TaskForm(obj=task)
+    if form.validate_on_submit():
+        try:
+            task.title=form.title.data
+            task.description=form.description.data
+            task.category=form.category.data
+            task.date_due=form.date_due.data
+            db.session.commit()
+            flash('Task edited successfully','success')
+            return redirect(url_for('index'))
+        except SQLAlchemyError as e:
+            db.session.rollback()
+            flash(f"Failed to edit task:{str(e)}",'danger')
+    tasks=Task.query.order_by(Task.id.desc())  
+    return render_template('index.html',form=form,task_id=task_id,tasks=tasks)
 
 
 
@@ -194,7 +200,7 @@ def edit_task(task_id):
 def delete_task(task_id):
     try:
         task = Task.query.filter_by(id=task_id, user_id=current_user.id).first_or_404()  # add user_id to filter the task by the current user only  # secure this with a login decorator or similar
-        db.session.delete(task)  # delete the task
+        db.session.delete(task)  
         db.session.commit()
         flash('Task deleted successfully!','success')
         return redirect(url_for('index'))

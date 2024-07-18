@@ -70,7 +70,7 @@ ul {
 
 .register-form {
   width: 400px;
-  background-color: rgb(81, 54, 131);
+  background-color: #311b92;
   color: #fff;
   border-radius: 10px;
   padding: 20px 30px;
@@ -177,7 +177,7 @@ body {
 
 .login-form {
   width: 400px;
-  background-color: rgb(81, 54, 131);
+  background-color: #311b92;
   color: #fff;
   border-radius: 10px;
   padding: 30px 40px;
