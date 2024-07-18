@@ -1,7 +1,6 @@
 import os
 import secrets
-from flask import Flask
-from flask import redirect,url_for,render_template,flash,request
+from flask import Flask,redirect,url_for,render_template,flash,request
 from flask_bcrypt import Bcrypt
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.exc import SQLAlchemyError
@@ -37,7 +36,7 @@ class User(UserMixin,db.Model):
     username = db.Column(db.String(80), unique=True, nullable=False)
     email = db.Column(db.String(120), unique=True, nullable=False)
     password = db.Column(db.String(80), nullable=False)
-    profile_picture = db.Column(db.String(20), nullable=False, default = 'default.jpeg')
+    profile_picture = db.Column(db.String(20))#, nullable=False, default='default.jpeg')
     tasks = db.relationship('Task', backref='users', lazy='dynamic')
 
 
@@ -157,14 +156,13 @@ def index():
             db.session.rollback()
             flash(f'Failed to create task:{str(e)}','danger')
         return redirect(url_for('index')) 
-    else:
-       tasks=Task.query.order_by(Task.id.desc())
+    
+    tasks=Task.query.order_by(Task.id.desc())
     return render_template('index.html',form=form,tasks=tasks)
    
     
 
 @app.route('/update_task_status/<int:task_id>',methods=['GET','POST'])
-@login_required
 def update_task_status(task_id):
     try:
         task = Task.query.get_or_404(task_id)
@@ -178,7 +176,6 @@ def update_task_status(task_id):
 
 
 @app.route('/edit_task/<int:task_id>',methods=['GET','POST'])
-@login_required
 def edit_task(task_id):
     # try:
     #     task = Task.query.get_or_404(task_id)
@@ -194,25 +191,22 @@ def edit_task(task_id):
 
 
 @app.route('/delete_task/<int:task_id>',methods=['GET','POST'])
-@login_required
 def delete_task(task_id):
     try:
-        # task = Task.query.get_or_404(task_id)
         task = Task.query.filter_by(id=task_id, user_id=current_user.id).first_or_404()  # add user_id to filter the task by the current user only  # secure this with a login decorator or similar
         db.session.delete(task)  # delete the task
         db.session.commit()
-    # except NoResultFound:
-    #     flash('Task not found!','danger')
-    #     return redirect(url_for('index')
-        return redirect(url_for('index'))
-     
-        
         flash('Task deleted successfully!','success')
+        return redirect(url_for('index'))
+    except Exception('NoResultFound'):
+        flash('Task not found!','danger')
         return redirect(url_for('index'))
     except SQLAlchemyError as e:
         db.session.rollback()
         flash(f"Failed to delete task:{str(e)}",'danger')
         return redirect(url_for('index'))
+
+
 def save_picture(form_picture):
     random_hex = secrets.token_hex(8)
     _, f_ext = os.path.splitext(form_picture.filename)
@@ -225,7 +219,6 @@ def save_picture(form_picture):
     i.thumbnail(output_size)
     i.save(picture_path)
 
-        
     return picture_fn
 
 
@@ -238,15 +231,17 @@ def account():
         if form.picture.data:
             picture_file = save_picture(form.picture.data)
             current_user.profile_picture = picture_file
-        current_user.username = form.username.data
-        current_user.email = form.email.data
-        db.session.commit()
-        flash("Your account has been updated!","success")
-        return redirect(url_for('account'))
+            #Indented here
+            current_user.username = form.username.data
+            current_user.email = form.email.data
+            db.session.commit()
+            flash("Your account has been updated!","success")
+            return redirect(url_for('account'))
     elif request.method == "GET":
         form.username.data = current_user.username
         form.email.data = current_user.email
-    profile_picture = url_for('static',filename='profile_pics/' + current_user.profile_picture)
+        #Indented here
+        profile_picture = url_for('static',filename='profile_pics/' + current_user.profile_picture)
     return render_template('account.html',title='Account',profile_picture=profile_picture,form=form)
 
 
@@ -260,9 +255,8 @@ def register():
         user = User(username=form.username.data, email=form.email.data, password=hashed_password)
         db.session.add(user)
         db.session.commit()
-        flash(f'Your account has been created successfully.Please login.','success')
+        flash(f'Account created successfully.Please login.','success')
         return redirect(url_for('login'))
-    
     return render_template("register.html", title="Register", form=form)
 
 
@@ -272,10 +266,9 @@ def login():
     user = User.query.filter_by(username=form.username.data).first()
     if user and bcrypt.check_password_hash(user.password,form.password.data):
         login_user(user,remember=form.remember.data)
-        flash('You have logged in successfully!','success')
+        flash('Login in successful!','success')
         return redirect(url_for('index'))
-    else:
-        flash('Login unsuccessful.Check username and password.','danger')
+ 
     return render_template("login.html", title="Login", form=form)
 
 
@@ -286,5 +279,5 @@ def logout():
     return redirect(url_for('login'))
 
 if __name__ == '__main__':
-    app.run(port=5000, debug=True)
+    app.run(port=5001, debug=True)
  
