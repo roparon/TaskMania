@@ -56,4 +56,14 @@
     </div>
   </form>
 </main>
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const flashMessages = document.querySelectorAll('.flash-message'); // Highlighted change
+    flashMessages.forEach(function(message) {
+      setTimeout(function() { // Highlighted change
+        message.style.display = 'none'; // Highlighted change: Or use message.remove() to remove the element entirely
+      }, 2000); // Highlighted change: Adjust the delay (in milliseconds) as needed
+    });
+  });
+</script
 {% endblock %}

@@ -149,5 +149,15 @@
       integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM"
       crossorigin="anonymous"
     ></script>
+    <script>
+      document.addEventListener('DOMContentLoaded', function() {
+        const alert = document.querySelector('.alert'); // Select the alert div
+        if (alert) {
+          setTimeout(function() {
+            alert.style.display = 'none'; // Hide the alert after 2 seconds
+          }, 2000); // 2000 milliseconds = 2 seconds
+        }
+      });
+    </script
   </body>
 </html>
