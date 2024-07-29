@@ -1,23 +1,6 @@
-{% extends 'base.html' %} {% block content %}
+{% extends 'auth.html' %} {% block content %}
 <link rel="stylesheet" href="{{ url_for('static', filename='main.css') }}" />
 <main class="main-container">
-  <div class="flash-container">
-    {% with messages = get_flashed_messages(with_categories=true) %} {% if
-    messages %}
-    <ul>
-      {% for category, message in messages %}
-      <li
-        class="flash-message"
-        style="color: {% if category == 'success' %}green{% elif category ==
-        'danger' %}red{% else %}black{% endif %}"
-      >
-        <span class="span-message"> {{ message }} </span>
-      </li>
-      {% endfor %}
-    </ul>
-    {% endif %} {% endwith %}
-  </div>
-
   <form method="post" action="{{ url_for('register')}}" class="register-form">
     {{ form.hidden_tag() }}
 
