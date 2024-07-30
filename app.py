@@ -229,27 +229,28 @@ def save_picture(form_picture):
 
 
 
-@app.route("/account",methods=['POST','GET'])
+@app.route('/account', methods=['GET', 'POST'])
 @login_required
 def account():
+    if current_user.profile_picture:
+        profile_picture = url_for('static', filename='profile_pics/' + current_user.profile_picture)
+    else:
+        profile_picture = url_for('static', filename='profile_pics/default.jpg')  # Use a default profile picture
+
     form = UpdateAccountForm()
     if form.validate_on_submit():
         if form.picture.data:
             picture_file = save_picture(form.picture.data)
             current_user.profile_picture = picture_file
-            #Indented here
-            current_user.username = form.username.data
-            current_user.email = form.email.data
-            db.session.commit()
-            flash("Your account has been updated!","success")
-            return redirect(url_for('account'))
-    elif request.method == "GET":
+        current_user.username = form.username.data
+        current_user.email = form.email.data
+        db.session.commit()
+        flash('Your account has been updated!', 'success')
+        return redirect(url_for('account'))
+    elif request.method == 'GET':
         form.username.data = current_user.username
         form.email.data = current_user.email
-        #Indented here
-        profile_picture = url_for('static',filename='profile_pics/' + current_user.profile_picture)
-    return render_template('account.html',title='Account',profile_picture=profile_picture,form=form)
-
+    return render_template('account.html', title='Account', profile_picture=profile_picture, form=form)
 
 @app.route("/register",methods=["POST","GET"])   
 def register():
