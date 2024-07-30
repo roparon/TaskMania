@@ -212,25 +212,28 @@ def update_task_status(task_id):
         return redirect(url_for('index'))
 
 
-@app.route('/edit_task/<int:task_id>',methods=['GET','POST'])
+@app.route("/edit_task/<int:task_id>", methods=["GET", "POST"])
 @login_required
 def edit_task(task_id):
-    task = Task.query.filter_by(id=task_id).first()
-    form = TaskForm(obj=task)
+    form = TaskForm()
+    tasks = Task.query.order_by(Task.date_due).paginate(page=request.args.get('page', 1, type=int), per_page=4)
+    
     if form.validate_on_submit():
-        try:
-            task.title=form.title.data
-            task.description=form.description.data
-            task.category=form.category.data
-            task.date_due=form.date_due.data
-            db.session.commit()
-            flash('Task edited successfully','success')
-            return redirect(url_for('index'))
-        except SQLAlchemyError as e:
-            db.session.rollback()
-            flash(f"Failed to edit task:{str(e)}",'danger')
-    tasks=Task.query.order_by(Task.id.desc())  
-    return render_template('index.html',form=form,task_id=task_id,tasks=tasks)
+        task = Task.query.get(task_id)
+        task.title = form.title.data
+        task.description = form.description.data
+        task.date_due = form.date_due.data
+        db.session.commit()
+        flash('Task has been updated!', 'success')
+        return redirect(url_for('home'))
+    
+    elif request.method == 'GET':
+        task = Task.query.get(task_id)
+        form.title.data = task.title
+        form.description.data = task.description
+        form.date_due.data = task.date_due
+    
+    return render_template('index.html', form=form, task_id=task_id, tasks=tasks.items,pagination=tasks)
 
 
 
@@ -316,7 +319,7 @@ def register():
 @app.route("/login",methods=["POST","GET"])   
 def login():
     if current_user.is_authenticated:
-        return redirect(url_for("home"))
+        return redirect(url_for("index"))
     
     form = LoginForm()
     if form.validate_on_submit():
