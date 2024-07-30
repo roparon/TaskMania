@@ -1,6 +1,19 @@
 {% extends 'auth.html' %} {% block content %}
 <link rel="stylesheet" href="{{ url_for('static', filename='main.css') }}" />
 <main class="main-container">
+  <div class="col-md-4 " >
+    {% with messages = get_flashed_messages(with_categories=true) %} {% if
+    messages %}
+    <div
+      class="alert alert-success alert-dismissable"
+      role="alert"
+      style="color: {% if category == 'success' %}green{% elif category == 'danger' %}red{% else %}black{% endif %}"
+    >
+      {% for category, message in messages %} {{ message }} {% endfor %}
+      <button class="btn btn-close" aria-label="close">&Cross;</button>
+    </div>
+
+    {% endif %} {% endwith %}
   <form method="post" action="{{ url_for('login')}}" class="login-form">
     {{ form.hidden_tag() }}
     <h1>Login</h1>
