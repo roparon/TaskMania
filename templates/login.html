@@ -2,7 +2,7 @@
 <link rel="stylesheet" href="{{ url_for('static', filename='main.css') }}" />
 <main class="main-container">
   <div class="col-md-4 " >
-    {% with messages = get_flashed_messages(with_categories=true) %} {% if
+    <!-- {% with messages = get_flashed_messages(with_categories=true) %} {% if
     messages %}
     <div
       class="alert alert-success alert-dismissable"
@@ -13,7 +13,7 @@
       <button class="btn btn-close" aria-label="close">&Cross;</button>
     </div>
 
-    {% endif %} {% endwith %}
+    {% endif %} {% endwith %} -->
   <form method="post" action="{{ url_for('login')}}" class="login-form">
     {{ form.hidden_tag() }}
     <h1>Login</h1>
@@ -25,15 +25,21 @@
       {% endfor %} {% else %} {{ form.username(class='input-box') }} {% endif %}
       <!-- <i class="bx bxs-user"></i> -->
     </div>
-
+<!-- 
     <div class="password">
       {% if form.password.errors %} {{ form.password(class="input-box") }} {%
       for error in form.password.errors %}
       <span class="form-error">{{ error }}</span>
       {% endfor %} {% else %} {{ form.password(class="input-box") }} {% endif %}
       <!-- <i class="bx bxs-lock-alt"></i> -->
+    <!-- <-- </div> --> 
+    <div class="password">
+      {{ form.password(class="input-box") }}
+      {% for error in form.password.errors %}
+        <span class="form-error">{{ error }}</span>
+      {% endfor %}
     </div>
-
+    
     <div class="remember-forgot">
       <span>
         {{ form.remember(class='checkbox')}} {{ form.remember.label() }}

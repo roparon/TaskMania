@@ -39,7 +39,7 @@ class User(UserMixin,db.Model):
     username = db.Column(db.String(80), unique=True, nullable=False)
     email = db.Column(db.String(120), unique=True, nullable=False)
     password = db.Column(db.String(80), nullable=False)
-    profile_picture = db.Column(db.String(20))#, nullable=False, default='default.jpeg')
+    profile_picture = db.Column(db.String(20), nullable=False, default='image3.jpeg')
     tasks = db.relationship('Task', backref='users', lazy='dynamic')
 
 
@@ -48,17 +48,17 @@ class Task(db.Model):
     __tablename__ = 'tasks'
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(50), nullable=False)
-    description = db.Column(db.String(200), nullable=False)
+    description = db.Column(db.String, nullable=False)
     status = db.Column(db.Boolean, default=False,nullable=False)
     date_created = db.Column(db.Date,default= datetime.now)
-    date_due = db.Column(db.Date,nullable=False,default=datetime.now)
+    date_due = db.Column(db.Date,default=datetime.now,nullable=False)
     time_due = db.Column(db.Time,default=datetime.now().time())
     date_completed = db.Column(db.Date,default= datetime.now) 
     category = db.Column(db.String(50),nullable=False)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
     
 
-    def __repr__(self):
+    def _repr_(self):
         return f'{self.title} {self.description} {self.date_due} {self.category} {self.status} {self.time_due}'
 
 
@@ -88,8 +88,8 @@ class TaskForm(FlaskForm):
             raise ValidationError('Due time cannot be in the past.')
            
            
-        def __init__(self,*args,**kwargs):
-            super(TaskForm, self).__init__(*args,**kwargs)
+        def _init_(self,args,*kwargs):
+            super(TaskForm, self)._init_(args,*kwargs)
             self.time_due.data = (datetime.now() + timedelta(hours=1)).strftime('%H:%M')
 
     def validate_date_due(form, field):
@@ -98,8 +98,8 @@ class TaskForm(FlaskForm):
             raise ValidationError('Due date cannot be in the past.')
            
            
-        def __init__(self,*args,**kwargs):
-            super(TaskForm, self).__init__(*args,**kwargs)
+        def _init_(self,args,*kwargs):
+            super(TaskForm, self)._init_(args,*kwargs)
             self.date_due.data = (datetime.now + timedelta(days=7)).strftime('%Y-%m-%d')
            
 
@@ -187,15 +187,30 @@ def index():
         query = query.filter(
             Task.title.ilike(f'%{search_query}%') | 
             Task.description.ilike(f'%{search_query}%') | 
-            Task.category.ilike(f'%{search_query}%')
+            Task.category.ilike(f'%{search_query}%') 
+        
         )
     
     if sort_by == 'category':
-        tasks = query.order_by(Task.category, Task.date_due, Task.status).paginate(page=page,per_page=4)
+        query = query.order_by(Task.category)
+    elif sort_by == 'title':
+        query = query.order_by(Task.title)
+    elif sort_by == 'description':
+        query = query.order_by(Task.description)
+   
     else:
-        tasks = query.order_by(Task.id.desc()).paginate(page=page,per_page=4)
+        query = query.order_by(Task.id.desc())  # default sorting
+
+    tasks = query.paginate(page=page, per_page=3)
     
-    return render_template('index.html', form=form, tasks=tasks.items, sort_by=sort_by,pagination=tasks)
+    return render_template('index.html', form=form, tasks=tasks.items, sort_by=sort_by, pagination=tasks)
+    # if sort_by == 'category':
+    #     tasks = query.order_by(Task.category).paginate(page=page,per_page=4)
+  
+    # else:
+    #     tasks = query.order_by(Task.id.desc()).paginate(page=page,per_page=4)
+    
+    # return render_template('index.html', form=form, tasks=tasks.items, sort_by=sort_by,pagination=tasks)
 
 
 @app.route('/update_task_status/<int:task_id>',methods=['GET','POST'])
@@ -215,8 +230,10 @@ def update_task_status(task_id):
 @app.route("/edit_task/<int:task_id>", methods=["GET", "POST"])
 @login_required
 def edit_task(task_id):
-    form = TaskForm()
+    # form = TaskForm()
     tasks = Task.query.order_by(Task.date_due).paginate(page=request.args.get('page', 1, type=int), per_page=4)
+    task = Task.query.filter_by(id=task_id).first()
+    form = TaskForm(obj=task)
     
     if form.validate_on_submit():
         task = Task.query.get(task_id)
@@ -225,50 +242,47 @@ def edit_task(task_id):
         task.date_due = form.date_due.data
         db.session.commit()
         flash('Task has been updated!', 'success')
-        return redirect(url_for('home'))
+        return redirect(url_for('index'))
     
-    elif request.method == 'GET':
-        task = Task.query.get(task_id)
-        form.title.data = task.title
-        form.description.data = task.description
-        form.date_due.data = task.date_due
+    # elif request.method == 'GET':
+    #     task = Task.query.get(task_id)
+    #     form.title.data = task.title
+    #     form.description.data = task.description
+    #     form.date_due.data = task.date_due
     
     return render_template('index.html', form=form, task_id=task_id, tasks=tasks.items,pagination=tasks)
 
 
 
-@app.route('/delete_task/<int:task_id>',methods=['GET','POST'])
+@app.route('/delete_task/<int:task_id>', methods=['POST'])
 @login_required
 def delete_task(task_id):
     try:
-        task = Task.query.filter_by(id=task_id, user_id=current_user.id).first_or_404()  # add user_id to filter the task by the current user only  # secure this with a login decorator or similar
-        db.session.delete(task)  
+        task = Task.query.filter_by(id=task_id, user_id=current_user.id).first_or_404()
+        db.session.delete(task)
         db.session.commit()
-        flash('Task deleted successfully!','success')
-        return redirect(url_for('index'))
-    except Exception('NoResultFound'):
-        flash('Task not found!','danger')
+        flash('Task deleted successfully!', 'success')
         return redirect(url_for('index'))
     except SQLAlchemyError as e:
         db.session.rollback()
-        flash(f"Failed to delete task:{str(e)}",'danger')
+        flash(f'Failed to delete task!', 'danger')
         return redirect(url_for('index'))
-
-
+    except Exception as e:
+        flash(f'An error occurred!', 'danger')
+        return redirect(url_for('index'))
+        
+  
 def save_picture(form_picture):
     random_hex = secrets.token_hex(8)
     _, f_ext = os.path.splitext(form_picture.filename)
     picture_fn = random_hex + f_ext
-    picture_path = os.path.join(app.root_path, 'static/profile_pics', picture_fn)
+    picture_path = os.path.join(app.root_path, 'static/images', picture_fn)
                                 
     
-    output_size = (125, 125)
+    output_size = (100, 100)
     i = Image.open(form_picture)
-    i.thumbnail(output_size)
+    i = i.resize(output_size, Image.LANCZOS)
     i.save(picture_path)
-
-
-    #form_picture.save(picture_path) 
 
     return picture_fn
 
@@ -277,28 +291,38 @@ def save_picture(form_picture):
 @app.route('/account', methods=['GET', 'POST'])
 @login_required
 def account():
-    if current_user.profile_picture:
-        profile_picture = url_for('static', filename='profile_pics/' + current_user.profile_picture)
-    else:
-        profile_picture = url_for('static', filename='profile_pics/default.jpg')  # Use a default profile picture
-
     form = UpdateAccountForm()
     if form.validate_on_submit():
-        if form.picture.data:
-            picture_file = save_picture(form.picture.data)
-            current_user.profile_picture = picture_file
-            #Indented here
-        current_user.username = form.username.data
-        current_user.email = form.email.data
-        db.session.commit()
-        flash("Your account has been updated!","success")
-        return redirect(url_for('account'))
+        try:
+            if form.picture.data:
+                picture_file = save_picture(form.picture.data)
+                current_user.profile_picture = picture_file
+            current_user.username = form.username.data
+            current_user.email = form.email.data
+            db.session.commit()
+            flash("Your account has been updated!","success")
+            return redirect(url_for('account'))
+        except SQLAlchemyError as e:
+            db.session.rollback()
+            flash(f"Failed to update account, please choose another file.", "danger")
+            return redirect(url_for('account'))
+        except Exception as e:
+            flash(f"An error occurred while updating account!", "danger")
+            return redirect(url_for('account'))
     elif request.method == "GET":
         form.username.data = current_user.username
         form.email.data = current_user.email
-        #Indented here
-    # profile_picture = url_for('static',filename='profile_pics/' + current_user.profile_picture)
-    return render_template('account.html',title='Account',form=form)#profile_picture=profile_picture,
+
+     # Handle profile picture URL
+    if current_user.profile_picture:
+        profile_picture = url_for('static', filename='images/' + current_user.profile_picture)
+    else:
+        # Fallback to a default profile picture if none is set
+        profile_picture = url_for('static', filename='images/image3.jpeg')
+    
+    return render_template('account.html', title='Account', form=form, profile_picture=profile_picture)
+    # profile_picture = url_for('static',filename='images/' + current_user.profile_picture)
+    # return render_template('account.html',title='Account',form=form,profile_picture=profile_picture)
 
 
 @app.route("/register",methods=["POST","GET"])   
@@ -316,24 +340,37 @@ def register():
     return render_template("register.html", title="Register", form=form)
 
 
-@app.route("/login",methods=["POST","GET"])   
+# @app.route("/login",methods=["POST","GET"])   
+# def login():
+#     if current_user.is_authenticated:
+#         return redirect(url_for("index"))
+    
+#     form = LoginForm()
+#     if form.validate_on_submit():
+#         user = User.query.filter_by(username=form.username.data).first()
+#         if user and bcrypt.check_password_hash(user.password,form.password.data):
+#             login_user(user,remember=form.remember.data)
+#             next_page = request.args.get('next')
+#             return redirect(next_page) if next_page else redirect(url_for('index'))
+      
+ 
+#     return render_template("login.html", title="Login", form=form)
+
+@app.route("/login", methods=["POST", "GET"])
 def login():
     if current_user.is_authenticated:
         return redirect(url_for("index"))
-    
+
     form = LoginForm()
     if form.validate_on_submit():
         user = User.query.filter_by(username=form.username.data).first()
         if user and bcrypt.check_password_hash(user.password,form.password.data):
-            login_user(user,remember=form.remember.data)
+            login_user(user, remember=form.remember.data)
             next_page = request.args.get('next')
-            return redirect(next_page) if next_page else redirect(url_for('index'))
-        else:
-          flash("Login unsuccessful.Please check email and password!","danger")
- 
+            flash("Login successful!","success")
+            return redirect(next_page or url_for('index'))
+      
     return render_template("login.html", title="Login", form=form)
-
-
 
 @app.route("/logout")
 @login_required
@@ -342,5 +379,4 @@ def logout():
     return redirect(url_for('login'))
 
 if __name__ == '__main__':
-    app.run(port=5001, debug=True)
- 
+    app.run(port=5000, debug=True)

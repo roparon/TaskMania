@@ -15,8 +15,8 @@
                 <label class="input-group-text" for="sort_by">Sort by</label>
                 <select class="form-select" name="sort_by" id="sort_by" onchange="this.form.submit()">
                     <option value="category" {% if sort_by == 'category' %}selected{% endif %}>Category</option>
-                    <option value="date_due" {% if sort_by == 'date_due' %}selected{% endif %}>Due Date</option>
-                    <option value="status" {% if sort_by == 'status' %}selected{% endif %}>Status</option>
+                    <option value="title" {% if sort_by == 'title' %}selected{% endif %}> Title</option>
+                    <option value="description" {% if sort_by == 'description' %}selected{% endif %}>Description</option>
                 </select>
             </div>
         </div>
@@ -24,19 +24,25 @@
 </div>
     <!-- Form Column -->
     <div class="col-md-4 " >
-      {% with messages = get_flashed_messages(with_categories=true) %} {% if
-      messages %}
-      <div
-        class="alert alert-success alert-dismissable"
-        role="alert"
-        style="color: {% if category == 'success' %}green{% elif category == 'danger' %}red{% else %}black{% endif %}"
-      >
-        {% for category, message in messages %} {{ message }} {% endfor %}
-        <button class="btn btn-close" aria-label="close">&Cross;</button>
-      </div>
-
-      {% endif %} {% endwith %}
-
+      {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        <div
+          class="alert alert-success alert-dismissable d-flex justify-content-between"
+          role="alert"
+          style="color: {% if category == 'success' %}green{% elif category == 'danger' %}red{% else %}black{% endif %}"
+        >
+          <span>
+            {% for category, message in messages %}
+              {{ message }}
+            {% endfor %}
+          </span>
+          <button class="btn-close ms-auto  " style=" font-size: 1rem;" aria-label="close" data-bs-dismiss="alert"></button>
+          
+        </div>
+      {% endif %}
+    {% endwith %}
+    
+    
       <div class="card">
         <div class="card-body bg-warning" style="height: 550px;">
           <form
@@ -90,7 +96,7 @@
               <th>Status</th>
               <th>Title</th>
               <th>Description</th>
-              <th>Details</th>
+              <th >Details</th>
 
               <th>Action</th>
             </tr>
@@ -129,14 +135,15 @@
                 </div>
                 </div>
               </td>
-              <td class="p-2 ps-4">  
-                <small class="row text-center ">
-                  Date created:
-                  <span class="nowrap">{{ task.date_created}}</span>
+              <td class="p-2 ps-2">  
+                <small class="row  ">
+                
+                  <span class="">  Created on: </span><span class="">  ({{ task.date_created}})</span>
                 </small>
-                <small class="row  text-center ">
-                   Date due:
-                  <span class=" nowrap text-danger">{{ task.date_due}}</span>
+                <small class="row   ">
+                   
+                   <span class="nowrap" >Date due:  </span> <span class=" nowrap text-danger">{{ task.date_due}}</span>
+                  <span class="nowrap" >Time due: <span class=" nowrap text-danger">{{ task.time_due}}</span>
                </small>
            </td>
               <td>
@@ -167,6 +174,7 @@
           </tbody>
         </table>
         <!-- Pagination Controls -->
+
         <nav aria-label="Page navigation">
           <ul class="pagination justify-content-center">
               {% if pagination.has_prev %}
