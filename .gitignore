@@ -145,3 +145,4 @@ __pypackages__/
 *.env
 .env
 .env.*
+.qodo

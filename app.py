@@ -25,7 +25,7 @@ login_manager.login_view = 'login'
 # Generate a secret key for the application
 app.config['SECRET_KEY'] = secrets.token_hex(16)
 # Configure the database connection
-app.config['SQLALCHEMY_DATABASE_URI'] ='postgresql://captain: @localhost:5432/taskmania'
+app.config['SQLALCHEMY_DATABASE_URI'] ='postgresql://captain:captain@localhost:5432/taskmania'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 # Initialize the database
 db = SQLAlchemy(app)
@@ -379,4 +379,4 @@ def logout():
     return redirect(url_for('login'))
 
 if __name__ == '__main__':
-    app.run(port=5000, debug=True)
+    app.run(host="0.0.0.0",port=5002)
